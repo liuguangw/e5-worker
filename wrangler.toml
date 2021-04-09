@@ -1,0 +1,11 @@
+name = "e5"
+type = "webpack"
+#账号ID
+account_id = "7f68308ebdf***"
+workers_dev = true
+route = ""
+#区域ID
+zone_id = "fb3c60cffb49***"
+
+[site]
+bucket = "./public"

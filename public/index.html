@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>发起授权页</title>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="auth-page">
+
+    <h2>Auth Forms</h2>
+
+    <form method="post" action="/" onsubmit="return processRedirect(this)">
+        <label for="client_id">client id:</label><br>
+        <input type="text" id="client_id" name="client_id" value="88ff5017-ee0c-4017-9481-7f5705efc40e"><br>
+        <label for="scope">scope:</label><br>
+        <input type="text" id="scope" name="scope" value="offline_access user.read mail.read"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+
+    <p>If you click the "Submit" button, the form-data will redirect to auth page.</p>
+</div>
+<div class="token-page" style="display: none;">
+    <h2>fetch token Forms</h2>
+
+    <form id="form" method="post" action="/" onsubmit="return processFetchToken(this)">
+        <label for="code">code:</label><br>
+        <input type="text" id="code" name="code" readonly><br>
+        <label for="t_client_id">client id:</label><br>
+        <input type="text" id="t_client_id" name="client_id" value=""><br>
+        <label for="client_secret">client secret:</label><br>
+        <input type="text" id="client_secret" name="client_secret" value=""><br>
+        <input type="submit" value="Submit">
+    </form>
+
+    <p><a href="/">go back</a> </p>
+
+    <div class="error-msg" style="display: none;"></div>
+    <div class="success-info" style="display: none;">
+        <label for="token">access_token:</label><br>
+        <input type="text" id="token" readonly><br>
+        <label for="rtoken">refresh_token:</label><br>
+        <input type="text" id="rtoken" readonly><br>
+        <label for="expires_in">expires in:</label><br>
+        <input type="text" id="expires_in" readonly><br>
+    </div>
+</div>
+<script type="text/javascript">
+    (function () {
+        var paramsInfo = new URLSearchParams(location.search);
+        var codeStr = paramsInfo.get("code");
+        if (codeStr != null) {
+            var formInfo = document.getElementById("form");
+            formInfo.code.value = codeStr;
+            document.getElementsByClassName("auth-page").item(0).style.display = "none";
+            document.getElementsByClassName("token-page").item(0).style.display = "block";
+        }
+        var cachedClientId = localStorage.getItem("client_id")
+        if (cachedClientId != null) {
+            document.getElementById("client_id").value = cachedClientId
+            document.getElementById("t_client_id").value = cachedClientId
+        }
+    })();
+
+    function processRedirect(formInfo) {
+        var jumpUrl = location.origin + "/";
+        localStorage.setItem("client_id", formInfo.client_id.value)
+        location.href = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?" +
+            "client_id=" + formInfo.client_id.value +
+            "&response_type=code" +
+            "&redirect_uri=" + encodeURI(jumpUrl) +
+            "&response_mode=query" +
+            "&scope=" + encodeURI(formInfo.scope.value) +
+            "&prompt=select_account";
+        return false;
+    }
+
+    function processFetchToken(formInfo) {
+        var postData = {
+            "client_id": formInfo.client_id.value,
+            "client_secret": formInfo.client_secret.value,
+            "redirect_uri": location.origin + "/",
+            "code": formInfo.code.value
+        };
+        document.getElementsByClassName("success-info").item(0).style.display = "none";
+        document.getElementsByClassName("error-msg").item(0).style.display = "none";
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("POST", "/api/fetch-token", true);
+        xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xmlhttp.send(JSON.stringify(postData));
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState === XMLHttpRequest.DONE) {
+                let responseText = xmlhttp.responseText;
+                let responseData = JSON.parse(responseText)
+                if (xmlhttp.status === 200) {
+                    document.getElementById("token").value = responseData.access_token;
+                    document.getElementById("rtoken").value = responseData.refresh_token;
+                    document.getElementById("expires_in").value = responseData.expires_in;
+                    document.getElementsByClassName("success-info").item(0).style.display = "block";
+                } else {
+                    document.getElementsByClassName("error-msg").item(0).innerHTML =
+                        "<pre>" + responseData.error_description + "</pre>"
+                    document.getElementsByClassName("error-msg").item(0).style.display = "block";
+                }
+            }
+        }
+        return false;
+    }
+</script>
+</body>
+</html>

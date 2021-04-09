@@ -1,0 +1,38 @@
+body {
+    margin: 0;
+}
+
+.auth-page, .token-page {
+    width: 80%;
+    margin: 0 auto;
+}
+
+div input[type=text] {
+    display: block;
+    width: 80%;
+    height: 40px;
+    line-height: 1.5;
+}
+
+form input[type=submit] {
+    width: 200px;
+    height: 48px;
+    line-height: 48px;
+    border: none;
+    border-radius: 8px;
+    background-color: #ccc;
+    color: green;
+}
+
+form input[type=submit]:hover {
+    opacity: 80%;
+}
+
+.token-page .error-msg {
+    color: red;
+}
+
+.token-page .success-info {
+    margin-top: 15px;
+    color: green;
+}
